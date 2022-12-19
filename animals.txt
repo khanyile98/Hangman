@@ -1,0 +1,10 @@
+dog
+monkey
+goose
+fish
+elephant
+tiger
+rabit
+dolphin
+crocodile
+hippo

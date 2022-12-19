@@ -1,11 +1,14 @@
 package hangman;
 
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
 
 class Game{
     Scanner reader = null;
     Random random = new Random();
+    private int attempts = 5; 
 
     ArrayList<String> readFile(String fileName){
         ArrayList<String> contents = new ArrayList<String>();
@@ -28,20 +31,24 @@ class Game{
         return words.get(index);
     }
 
-    String randomLetter(String word){
+    char randomLetter(String word){
         int index = random.nextInt(word.length());
+        return word.charAt(index);
+    }
+
+    String wordToGuess(String word, char c){
         StringBuilder newWord = new StringBuilder();
-       
-        for (int i = 0; i < word.length(); i++){
-            if (word.charAt(i) == word.charAt(index)){
+        
+        for (int i=0; i<word.length(); i++){
+            if (word.charAt(i) != c){
                 newWord.append("_");
             }else{
-                newWord.append(word.charAt(i));
+                newWord.append(c);
             }
         }
 
         System.out.println("Guess the word: " + newWord);
-        return String.valueOf(word.charAt(index));
+        return String.valueOf(newWord);
     }
 
     String userInput(){
@@ -52,25 +59,64 @@ class Game{
         return guess;
     }
 
-    public void showResponse(String answer, String word, String randLetter){
-        System.out.println("The word was: " + word);
+    String drawHangman(){
+        String[] hangmanSticks = {
+        "/----\n|\n|\n|\n|\n_______",
+        "/----\n|   0\n|\n|\n|\n_______",
+        "/----\n|   0\n|   |\n|   |\n|\n_______",
+        "/----\n|   0\n|  /|\\\n|   |\n|\n_______",
+        "/----\n|   0\n|  /|\\\n|   |\n|  / \\\n_______"
 
-        if (answer.equalsIgnoreCase(randLetter)){
-            System.out.println("Well done! You are awesome!");
-        }else{
-            System.out.println("Wrong! Do better next time!");
+        }; 
+
+        return hangmanSticks[5 - attempts];
+    }
+
+    public String showResponse(String answer, String guess, String word, int attempts){
+
+        if (word.contains(answer) && !guess.contains(answer)){
+
+            for (int i=0; i < word.length(); i++){
+                if (String.valueOf(word.charAt(i)).equals(answer)){
+                    guess = guess.substring(0, i) + answer + guess.substring(i + 1, word.length());
+                }
+            }
+
+            return guess;
         }
-       
+        else{
+            System.out.println("Wrong! Attempts left: " + (attempts - 1));
+            System.out.println(drawHangman());
+            this.attempts--;
+            return guess;
+        }
     }
 
 
     public void runGame(String filename){
         ArrayList<String> words = this.readFile(filename);
         String word = this.randomWord(words);
-        String randLetter = this.randomLetter(word);
-        String answer = this.userInput();
+        char randLetter = this.randomLetter(word);
+        String guess = wordToGuess(word, randLetter);
 
-        this.showResponse(answer, word, randLetter);
+        while (attempts > 0){
+            String answer = this.userInput().toLowerCase();
+
+            if (answer.equals("exit")){
+                System.out.println("Thank you for playing. Hope to see you again.");
+                return;
+            }
+
+            guess = showResponse(answer, guess, word, attempts);
+
+            if (guess.equals(word)){
+                System.out.println("Wonderful! You won.");
+                return;
+            }
+            System.out.println(guess);
+        }
+
+        System.out.println("Sorry, you are out of guesses. The word was: " + word);
         this.reader.close();
     }
 
